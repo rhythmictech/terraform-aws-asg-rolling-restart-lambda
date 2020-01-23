@@ -37,12 +37,20 @@ resource "aws_iam_role" "this" {
 data "aws_iam_policy_document" "lambda_policy_doc" {
   statement {
     actions = [
-      "autoscaling:SetInstanceHealth",
-      "autoscaling:DescribeAutoScalingGroups"
+      "autoscaling:SetInstanceHealth"
     ]
 
     resources = [
       "arn:aws:autoscaling:${local.region}:${local.account_id}:*:autoScalingGroupName/${var.asg_name}"
+    ]
+  }
+  statement {
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups"
+    ]
+
+    resources = [
+      "*"
     ]
   }
 }
@@ -72,8 +80,8 @@ resource "aws_lambda_function" "this" {
   tags             = module.tags.tags
   environment {
     variables = {
-      ASG_NAME   = var.asg_name
-      LOGLEVEL   = var.loglevel
+      ASG_NAME = var.asg_name
+      LOGLEVEL = var.loglevel
     }
   }
   lifecycle {
