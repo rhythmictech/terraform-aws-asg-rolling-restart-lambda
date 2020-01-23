@@ -27,5 +27,9 @@ variable "asg_name" {
 variable "tags" {
   type        = map
   description = "Map of tags that should be added to stuff"
+}
 
+variable "codepipeline_arn" {
+  type = string
+  description = "ARN of the codepipeline we are interacting with. * will work for all"
 }

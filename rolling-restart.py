@@ -17,6 +17,10 @@ try:
 except:
     raise
 
+try:
+    codepipeline = boto3.client(
+        'codepipeline'
+    )
 
 def getAsg(name):
     try:
@@ -66,6 +70,19 @@ def replaceInstances(idList):
         while not isAsgHealthy(getAsg(ASGNAME)) and len(getAsgInstances(getAsg(ASGNAME))) == targetNum:
             time.sleep(1)
 
+def putJobSuccess(event)
+    response = codepipeline.put_job_success_result(
+        jobId=event['CodePipeline.job'].id
+    )
+
+def putJobFailure(event, message)
+    response = codepipeline.put_job_failure_result(
+        jobId=event['CodePipeline.job'].id,
+        failureDetails={
+            'type': 'JobFailed',
+            'message': message
+        }
+    )
 
 def handler(event, context):
     logger.debug('## ENVIRONMENT VARIABLES')
@@ -82,6 +99,7 @@ def handler(event, context):
     logger.info(
         'Done! All instances have been replaced and are marked as healthy'
     )
+    putJobSuccess(event)
     return {
         'statusCode': 200,
         'body': json.dumps('Done! All instances have been replaced and are marked as healthy')
