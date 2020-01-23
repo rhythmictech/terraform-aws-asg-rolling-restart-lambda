@@ -11,7 +11,7 @@ module "tags" {
 
 data "archive_file" "this" {
   type        = "zip"
-  source_file = "rolling-restart.py"
+  source_file = "${path.module}/rolling-restart.py"
   output_path = "${path.module}/tmp/lambda.zip"
 }
 
@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 }
 
 resource "aws_iam_role" "this" {
-  name_prefix        = module.tags.tags["Name"]
+  name_prefix        = module.tags.name32
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
   tags = module.tags.tags
 }
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  name_prefix = module.tags.tags["Name"]
+  name_prefix = module.tags.name
   role = aws_iam_role.this
   policy = data.aws_iam_policy_document.lambda_policy_doc.json
 }
@@ -63,7 +63,7 @@ resource "random_uuid" "lambda_uuid" {}
 
 resource "aws_lambda_function" "this" {
   filename         = data.archive_file.this.output_path
-  function_name    = "${module.tags.tags["Name"]}_${random_uuid.lambda_uuid}"
+  function_name    = "${module.tags.name}_${random_uuid.lambda_uuid}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
