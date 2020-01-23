@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
-import argparse
 import boto3
-import time
 import json
+import logging
+import os
+import time
 
-parser = argparse.ArgumentParser(
-    description='This is a simple script to redeploy all instances in an autoscaling group'
-)
+LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
+logger = logging.getLogger()
+logging.basicConfig(level=LOGLEVEL)
 
-parser.add_argument(
-    '-n',
-    '--name',
-    help='The name of the AutoScaling Group you want to restart',
-    required=True
-)
-
-parser.add_argument(
-    '-r',
-    '--region',
-    help='The region you are targetting',
-    required=True
-)
-
-args = parser.parse_args()
-client = boto3.client('autoscaling', region_name=args.region)
+try:
+    client = boto3.client(
+        'autoscaling', region_name=os.environ.get('AWS_REGION', 'us-east-1')
+    )
+except:
+    raise
 
 
 def getAsg(name):
@@ -33,9 +24,9 @@ def getAsg(name):
             MaxRecords=100
         )
         if len(asg['AutoScalingGroups']) > 1:
-            raise LookupError("Found too many ASGs")
+            raise Exception("Found too many ASGs")
         elif len(asg['AutoScalingGroups']) == 0:
-            raise LookupError("Found no ASGs")
+            raise Exception("Found no ASGs")
         return asg
     except:
         raise
@@ -67,18 +58,30 @@ def replaceInstances(idList):
         except:
             raise
         # I want to make sure the instance is marked as unhealthy before I start looking for the new one
-        print('Waiting for instance to be marked unhealthy')
+        logger.info('Waiting for instance to be marked unhealthy')
         while isAsgHealthy(getAsg(args.name)) or len(getAsgInstances(getAsg(args.name))) < targetNum:
             time.sleep(1)
-        print('Waiting for all instances to be marked healthy')
+        logger.info('Waiting for all instances to be marked healthy')
         while not isAsgHealthy(getAsg(args.name)) and len(getAsgInstances(getAsg(args.name))) == targetNum:
             time.sleep(1)
 
 
-targetInstances = getAsgInstances(getAsg(args.name))
+def handler(event, context):
+    logger.debug('## ENVIRONMENT VARIABLES')
+    logger.debug(os.environ)
+    logger.debug('## EVENT')
+    logger.debug(event)
 
-print('Waiting for all instances to be marked healthy')
-while not isAsgHealthy(getAsg(args.name)):
-    time.sleep(1)
-replaceInstances(targetInstances)
-print('Done! All instances have been replaced and are marked as healthy')
+    targetInstances = getAsgInstances(getAsg(os.environ.get('ASG_NAME')))
+    logger.info('Waiting for all instances to be marked healthy')
+    while not isAsgHealthy(getAsg(args.name)):
+        time.sleep(1)
+    logger.info('Replacing instances')
+    replaceInstances(targetInstances)
+    logger.info(
+        'Done! All instances have been replaced and are marked as healthy'
+    )
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Done! All instances have been replaced and are marked as healthy')
+    }
