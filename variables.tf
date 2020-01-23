@@ -17,3 +17,9 @@ variable "asg_name" {
   type = string
   description = "Name of the ASG to execute the rolling restart against"
 }
+
+variable "tags" {
+  type = map
+  description = "Map of tags that should be added to stuff"
+  
+}
