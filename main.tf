@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
   statement {
     actions = [
       "autoscaling:SetInstanceHealth",
-      "autoscaling:DescribeAutoScalingInstances"
+      "autoscaling:DescribeAutoScalingGroups"
     ]
 
     resources = [
