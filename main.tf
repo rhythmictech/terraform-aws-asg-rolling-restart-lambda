@@ -1,6 +1,6 @@
 module "tags" {
   source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
-  tags = var.tags
+  tags   = var.tags
 
   names = [
     var.name,
@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 resource "aws_iam_role" "this" {
   name_prefix        = module.tags.name32
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
-  tags = module.tags.tags
+  tags               = module.tags.tags
 }
 
 data "aws_iam_policy_document" "lambda_policy_doc" {
@@ -49,8 +49,8 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
 
 resource "aws_iam_role_policy" "this" {
   name_prefix = module.tags.name
-  role = aws_iam_role.this.name
-  policy = data.aws_iam_policy_document.lambda_policy_doc.json
+  role        = aws_iam_role.this.name
+  policy      = data.aws_iam_policy_document.lambda_policy_doc.json
 }
 
 resource "aws_iam_role_policy_attachment" "lambda-execution-role-attach" {
@@ -70,7 +70,12 @@ resource "aws_lambda_function" "this" {
   timeout          = 600
   source_code_hash = data.archive_file.this.output_base64sha256
   tags             = module.tags.tags
-
+  environment {
+    variables = {
+      ASG_NAME   = var.asg_name
+      AWS_REGION = local.region
+    }
+  }
   lifecycle {
     ignore_changes = [
       filename,

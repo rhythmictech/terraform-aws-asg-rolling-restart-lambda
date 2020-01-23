@@ -8,6 +8,7 @@ import time
 LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
 logger = logging.getLogger()
 logging.basicConfig(level=LOGLEVEL)
+ASGNAME = os.environ.get('ASG_NAME')
 
 try:
     client = boto3.client(
@@ -20,7 +21,7 @@ except:
 def getAsg(name):
     try:
         asg = client.describe_auto_scaling_groups(
-            AutoScalingGroupNames=[args.name],
+            AutoScalingGroupNames=[ASGNAME],
             MaxRecords=100
         )
         if len(asg['AutoScalingGroups']) > 1:
@@ -59,10 +60,10 @@ def replaceInstances(idList):
             raise
         # I want to make sure the instance is marked as unhealthy before I start looking for the new one
         logger.info('Waiting for instance to be marked unhealthy')
-        while isAsgHealthy(getAsg(args.name)) or len(getAsgInstances(getAsg(args.name))) < targetNum:
+        while isAsgHealthy(getAsg(ASGNAME)) or len(getAsgInstances(getAsg(ASGNAME))) < targetNum:
             time.sleep(1)
         logger.info('Waiting for all instances to be marked healthy')
-        while not isAsgHealthy(getAsg(args.name)) and len(getAsgInstances(getAsg(args.name))) == targetNum:
+        while not isAsgHealthy(getAsg(ASGNAME)) and len(getAsgInstances(getAsg(ASGNAME))) == targetNum:
             time.sleep(1)
 
 
@@ -72,9 +73,9 @@ def handler(event, context):
     logger.debug('## EVENT')
     logger.debug(event)
 
-    targetInstances = getAsgInstances(getAsg(os.environ.get('ASG_NAME')))
+    targetInstances = getAsgInstances(getAsg(ASGNAME))
     logger.info('Waiting for all instances to be marked healthy')
-    while not isAsgHealthy(getAsg(args.name)):
+    while not isAsgHealthy(getAsg(ASGNAME)):
         time.sleep(1)
     logger.info('Replacing instances')
     replaceInstances(targetInstances)
