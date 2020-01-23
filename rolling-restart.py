@@ -74,12 +74,12 @@ def replaceInstances(idList):
 
 def putJobSuccess(event):
     response = codepipeline.put_job_success_result(
-        jobId=event['CodePipeline.job'].id
+        jobId=event['CodePipeline.job']['id']
     )
 
 def putJobFailure(event, message):
     response = codepipeline.put_job_failure_result(
-        jobId=event['CodePipeline.job'].id,
+        jobId=event['CodePipeline.job']['id'],
         failureDetails={
             'type': 'JobFailed',
             'message': message
