@@ -49,7 +49,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
 
 resource "aws_iam_role_policy" "this" {
   name_prefix = module.tags.name
-  role = aws_iam_role.this
+  role = aws_iam_role.this.name
   policy = data.aws_iam_policy_document.lambda_policy_doc.json
 }
 
@@ -63,7 +63,7 @@ resource "random_uuid" "lambda_uuid" {}
 
 resource "aws_lambda_function" "this" {
   filename         = data.archive_file.this.output_path
-  function_name    = "${module.tags.name}_${random_uuid.lambda_uuid}"
+  function_name    = "${module.tags.name}_${random_uuid.lambda_uuid.result}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
