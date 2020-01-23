@@ -73,7 +73,6 @@ resource "aws_lambda_function" "this" {
   environment {
     variables = {
       ASG_NAME   = var.asg_name
-      AWS_REGION = local.region
       LOGLEVEL   = var.loglevel
     }
   }
