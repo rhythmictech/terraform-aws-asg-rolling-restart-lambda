@@ -65,7 +65,7 @@ resource "aws_lambda_function" "this" {
   filename         = data.archive_file.pipeline_lambda.output_path
   function_name    = "${module.tags.tags["Name"]}_${random_uuid.lambda_uuid}"
   role             = aws_iam_role.pipeline_lambda.arn
-  handler          = "lambda-deploy.handler"
+  handler          = "rolling-restart.handler"
   runtime          = "python3.6"
   timeout          = 600
   source_code_hash = data.archive_file.pipeline_lambda.output_base64sha256
