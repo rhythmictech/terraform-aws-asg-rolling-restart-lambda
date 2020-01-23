@@ -74,6 +74,7 @@ resource "aws_lambda_function" "this" {
     variables = {
       ASG_NAME   = var.asg_name
       AWS_REGION = local.region
+      LOGLEVEL   = var.loglevel
     }
   }
   lifecycle {

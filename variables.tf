@@ -7,6 +7,12 @@ locals {
   region     = data.aws_region.current.name
 }
 
+variable "loglevel" {
+  type        = string
+  default     = "INFO"
+  description = "Logging level for the rolling restart lambda function."
+}
+
 variable "name" {
   type        = string
   default     = "rolling-restart-lambda"
