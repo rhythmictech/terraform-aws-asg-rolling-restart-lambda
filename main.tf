@@ -31,6 +31,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 resource "aws_iam_role" "this" {
   name_prefix        = module.tags.tags["Name"]
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
+  tags = module.tags.tags
 }
 
 data "aws_iam_policy_document" "lambda_policy_doc" {
