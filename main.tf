@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "this" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda-execution-role-attach" {
-  role       = aws_iam_role.pipeline_lambda.name
+  role       = aws_iam_role.this.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -62,13 +62,13 @@ resource "random_uuid" "lambda_uuid" {}
 
 
 resource "aws_lambda_function" "this" {
-  filename         = data.archive_file.pipeline_lambda.output_path
+  filename         = data.archive_file.this.output_path
   function_name    = "${module.tags.tags["Name"]}_${random_uuid.lambda_uuid}"
-  role             = aws_iam_role.pipeline_lambda.arn
+  role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
   timeout          = 600
-  source_code_hash = data.archive_file.pipeline_lambda.output_base64sha256
+  source_code_hash = data.archive_file.this.output_base64sha256
   tags             = module.tags.tags
 
   lifecycle {
