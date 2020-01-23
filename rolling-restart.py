@@ -21,6 +21,8 @@ try:
     codepipeline = boto3.client(
         'codepipeline'
     )
+except:
+    raise
 
 def getAsg(name):
     try:
@@ -70,12 +72,12 @@ def replaceInstances(idList):
         while not isAsgHealthy(getAsg(ASGNAME)) and len(getAsgInstances(getAsg(ASGNAME))) == targetNum:
             time.sleep(1)
 
-def putJobSuccess(event)
+def putJobSuccess(event):
     response = codepipeline.put_job_success_result(
         jobId=event['CodePipeline.job'].id
     )
 
-def putJobFailure(event, message)
+def putJobFailure(event, message):
     response = codepipeline.put_job_failure_result(
         jobId=event['CodePipeline.job'].id,
         failureDetails={
