@@ -56,6 +56,7 @@ def isAsgHealthy(obj):
 
 
 def replaceInstances(idList):
+    targetNum = len(idList)
     for id in idList:
         try:
             client.set_instance_health(
@@ -67,16 +68,17 @@ def replaceInstances(idList):
             raise
         # I want to make sure the instance is marked as unhealthy before I start looking for the new one
         print('Waiting for instance to be marked unhealthy')
-        while isAsgHealthy(getAsg(args.name)):
+        while isAsgHealthy(getAsg(args.name)) or len(getAsgInstances(getAsg(args.name))) < targetNum:
             time.sleep(1)
         print('Waiting for all instances to be marked healthy')
-        while ! isAsgHealthy(getAsg(args.name)):
+        while not isAsgHealthy(getAsg(args.name)) and len(getAsgInstances(getAsg(args.name))) == targetNum:
             time.sleep(1)
 
 
 targetInstances = getAsgInstances(getAsg(args.name))
 
 print('Waiting for all instances to be marked healthy')
-while ! isAsgHealthy(getAsg(args.name)):
+while not isAsgHealthy(getAsg(args.name)):
     time.sleep(1)
 replaceInstances(targetInstances)
+print('Done! All instances have been replaced and are marked as healthy')
