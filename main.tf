@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
     ]
 
     resources = [
-      "arn:aws:autoscaling:${local.region}:${local.account_id}:*:autoScalingGroupName/${var.asg_name}"
+      "arn:aws:autoscaling:${local.region}:${local.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.asg_name}"
     ]
   }
   statement {
@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
     ]
 
     resources = [
-      var.codepipeline_arn
+      "*"
     ]
   }
 
