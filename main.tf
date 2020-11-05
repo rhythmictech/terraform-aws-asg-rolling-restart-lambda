@@ -81,7 +81,7 @@ resource "random_uuid" "lambda_uuid" {}
 
 
 resource "aws_lambda_function" "this" {
-  filename         = data.archive_file.this.output_path
+  filename         = "${path.module}/tmp/lambda.zip"
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
