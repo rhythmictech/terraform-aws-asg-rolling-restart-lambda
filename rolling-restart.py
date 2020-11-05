@@ -24,6 +24,7 @@ try:
 except:
     raise
 
+
 def getAsg(name):
     try:
         asg = client.describe_auto_scaling_groups(
@@ -72,10 +73,12 @@ def replaceInstances(idList):
         while not isAsgHealthy(getAsg(ASGNAME)) and len(getAsgInstances(getAsg(ASGNAME))) == targetNum:
             time.sleep(1)
 
+
 def putJobSuccess(event):
     response = codepipeline.put_job_success_result(
         jobId=event['CodePipeline.job']['id']
     )
+
 
 def putJobFailure(event, message):
     response = codepipeline.put_job_failure_result(
@@ -85,6 +88,7 @@ def putJobFailure(event, message):
             'message': message
         }
     )
+
 
 def handler(event, context):
     logger.debug('## ENVIRONMENT VARIABLES')
