@@ -1,0 +1,39 @@
+name: Create a zipped lambda func for deployment
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # push events to matching v*
+
+jobs:
+  build:
+    run-on: ubuntu-latest
+    # create the zip file 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Lambda Function
+        run: |
+          zip -9yr  lambda.zip rolling-start.py
+      - name: Create release
+        id: create_release
+        use: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prelease: true
+      - name: Upload lambda to assets
+        id: upload-lambda-asset
+        uses: actions/upload-release-assets@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./lambda.zip
+          asset_name: lambda.zip
+          asset_content_type: application/zip
+
