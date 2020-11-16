@@ -12,9 +12,9 @@ module "lambda_version" {
   source  = "rhythmictech/find-release-by-semver/github"
   version = "~> 1.0"
 
-  repo_name         = local.repo_name
-  repo_owner        = local.repo_owner
-  version_constrain = "~2.0.1"
+  repo_name          = local.repo_name
+  repo_owner         = local.repo_owner
+  version_constraint = "~1.0.1-rc5"
 }
 
 locals {
