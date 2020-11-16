@@ -1,7 +1,7 @@
 module "tags" {
   source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
   tags   = var.tags
-  
+
   names = [
     var.name,
     "rolling-restart",
@@ -32,7 +32,6 @@ resource "null_resource" "lambda_zip" {
     command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.zip"
   }
 }
-
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
