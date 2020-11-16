@@ -32,11 +32,6 @@ resource "null_resource" "lambda_zip" {
   }
 }
 
-data "archive_file" "this" {
-  type        = "zip"
-  output_path = "${path.module}/lambda.zip"
-}
-
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
     actions = [
