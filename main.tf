@@ -98,7 +98,7 @@ resource "random_uuid" "lambda_uuid" {}
 
 
 resource "aws_lambda_function" "this" {
-  filename         = data.github_release.this.zipball_url.output
+  filename         = "${module.path}/lambda.zip"
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
