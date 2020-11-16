@@ -9,16 +9,16 @@ module "tags" {
 }
 
 module "lambda_version" {
-  source = "rhythmictech/find-release-by-semver/github"
+  source  = "rhythmictech/find-release-by-semver/github"
   version = "~> 1.0"
 
-  repo_name = local.repo_name
-  repo_owner = local.repo_owner
+  repo_name         = local.repo_name
+  repo_owner        = local.repo_owner
   version_constrain = "~2.0.1"
 }
 
 locals {
-  lambda_version = module.lambda_version.target_version
+  lambda_version     = module.lambda_version.target_version
   lambda_version_tag = module.lambda_version.version_info.release_tag
 }
 
@@ -26,10 +26,10 @@ resource "null_resource" "lambda_zip" {
   triggers = {
     on_version_change = local.lambda_version
   }
-}
 
-provisioner "local-exec" {
-    command = "curl -Lso ${path.module/lambda.zip https://github.com/${local.repo_full_ame}/releases/download/${local.lambda_version_tag}/lambda.zip"
+  provisioner "local-exec" {
+    command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_ame}/releases/download/${local.lambda_version_tag}/lambda.zip"
+  }
 }
 
 data "archive_file" "this" {

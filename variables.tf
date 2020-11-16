@@ -7,7 +7,7 @@ locals {
   region         = data.aws_region.current.name
   full_repo_name = "${local.repo_owner}/${local.repo_name}"
   repo_owner     = "rhythmictech"
-  repo_name      + "terraform-aws-asg-rolling-restart-lambda"
+  repo_name      = "terraform-aws-asg-rolling-restart-lambda"
 }
 
 variable "loglevel" {
