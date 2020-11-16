@@ -1,7 +1,6 @@
 module "tags" {
   source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
   tags   = var.tags
-
   names = [
     var.name,
     "rolling-restart",
@@ -9,10 +8,33 @@ module "tags" {
   ]
 }
 
+module "lambda_version" {
+  source = "rhythmictech/find-release-by-semver/github"
+  version = "~> 1.0"
+
+  repo_name = local.repo_name
+  repo_owner = local.repo_owner
+  version_constrain = "~2.0.1"
+}
+
+locals {
+  lambda_version = module.lambda_version.target_version
+  lambda_version_tag = module.lambda_version.version_info.release_tag
+}
+
+resource "null_resource" "lambda_zip" {
+  triggers = {
+    on_version_change = local.lambda_version
+  }
+}
+
+provisioner "local-exec" {
+    command = "curl -Lso ${path.module/lambda.zip https://github.com/${local.repo_full_ame}/releases/download/${local.lambda_version_tag}/lambda.zip"
+}
+
 data "archive_file" "this" {
   type        = "zip"
-  source_file = "${path.module}/rolling-restart.py"
-  output_path = "${path.module}/tmp/lambda.zip"
+  output_path = "${path.module}/lambda.zip"
 }
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -81,7 +103,7 @@ resource "random_uuid" "lambda_uuid" {}
 
 
 resource "aws_lambda_function" "this" {
-  filename         = data.archive_file.this.output_path
+  filename         = data.github_release.this.zipball_url.output
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"

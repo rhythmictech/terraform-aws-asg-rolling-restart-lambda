@@ -8,32 +8,26 @@ on:
 
 jobs:
   build:
-    run-on: ubuntu-latest
-    # create the zip file 
+    runs-on: ubuntu-latest
+    # create the zip file
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Build Lambda Function
         run: |
-          zip -9yr  lambda.zip rolling-start.py
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prelease: true
+          zip lambda.zip rolling-restart.py
+          ls
+
+      - name: Get tag 
+        id: get_tag
+        run: |
+          echo ::set-output name=VTAG::$( echo $GITHUB_REF | cut -d / -f 3 )
+
       - name: Upload lambda to assets
         id: upload-lambda-asset
-        uses: actions/upload-release-assets@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: AButler/upload-release-assets@v2.0
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./lambda.zip
-          asset_name: lambda.zip
-          asset_content_type: application/zip
-
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: '*.zip'
+          release-tag: ${{ steps.get_tag.outputs.VTAG }}
