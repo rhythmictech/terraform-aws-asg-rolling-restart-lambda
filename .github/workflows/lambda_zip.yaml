@@ -1,10 +1,9 @@
 name: Create a zipped lambda func for deployment
 
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-    - 'v*' # push events to matching v*
+  release:
+    types:
+      - created
 
 jobs:
   build:
