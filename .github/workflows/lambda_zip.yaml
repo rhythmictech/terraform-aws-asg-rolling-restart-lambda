@@ -1,0 +1,28 @@
+name: Create a zipped lambda func for deployment
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # create the zip file
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Lambda Function
+        run: |
+          zip lambda.zip rolling-restart.py
+
+      - name: Upload lambda to assets
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./lambda.zip
+          asset_name: lambda.zip
+          asset_content_type: application/zip
