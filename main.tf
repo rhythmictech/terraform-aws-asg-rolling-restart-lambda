@@ -14,7 +14,7 @@ module "lambda_version" {
 
   repo_name          = local.repo_name
   repo_owner         = local.repo_owner
-  version_constraint = "~1.0.1-rc6"
+  version_constraint = var.lambda_version_constraint
 }
 
 locals {
