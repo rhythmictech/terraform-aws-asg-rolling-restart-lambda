@@ -10,6 +10,12 @@ locals {
   repo_name      = "terraform-aws-asg-rolling-restart-lambda"
 }
 
+variable "lambda_version_constraint" {
+  default     = "~1.0.1-rc7"
+  description = "NPM style version constraint to apply when looking for the correct version of the lambda code"
+  type        = string
+}
+
 variable "loglevel" {
   type        = string
   default     = "INFO"
