@@ -28,8 +28,8 @@ jobs:
       - name: get checksum
         run: cat lambda.zip | openssl dgst -binary -sha256 | base64 > lambda.sha256sum.base64
 
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload zip
+        id: upload-zip
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,8 +39,8 @@ jobs:
           asset_name: lambda.zip
           asset_content_type: application/zip
 
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload shasum
+        id: upload-shasum
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
