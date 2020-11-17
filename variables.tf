@@ -11,7 +11,7 @@ locals {
 }
 
 variable "lambda_version_constraint" {
-  default     = "~1.0.1-rc7"
+  default     = "~1.0.1-rc9"
   description = "NPM style version constraint to apply when looking for the correct version of the lambda code"
   type        = string
 }
