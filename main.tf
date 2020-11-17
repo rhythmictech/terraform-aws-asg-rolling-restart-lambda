@@ -32,8 +32,6 @@ resource "null_resource" "lambda_zip" {
   }
 }
 
-  output_path = "${path.module}/lambda.zip"
-}
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
