@@ -32,8 +32,6 @@ resource "null_resource" "lambda_zip" {
   }
 }
 
-data "archive_file" "this" {
-  type        = "zip"
   output_path = "${path.module}/lambda.zip"
 }
 
