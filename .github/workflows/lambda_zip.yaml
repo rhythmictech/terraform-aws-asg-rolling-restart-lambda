@@ -26,12 +26,12 @@ jobs:
           if-no-files-found: error
 
       - name: get checksum
-        run: cat lambda.zip | openssl dgst -binary -sha256 | base64 > lambda.sha256sum.base64
+        run: cat lambda.zip | openssl dgst -binary -sha256 | base64 > lambda.sha256base64
 
       - name: upload shasum artifact
         uses: actions/upload-artifact@v2
         with:
-          name: lambda.sha256sum.base64
+          name: lambda.sha256base64
           path: ${{ github.workspace }}/lambda.zip
           if-no-files-found: error
 
@@ -53,6 +53,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./lambda.sha256sum.base64
-          asset_name: lambda.sha256sum.base64
+          asset_path: ./lambda.sha256base64
+          asset_name: lambda.sha256base64
           asset_content_type: text/plain

@@ -33,8 +33,12 @@ resource "null_resource" "lambda_zip" {
   }
 }
 
-data "http_http" "shasum" {
-  url = "https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.sha256sum.base64"
+data "http" "shasum" {
+  url = "https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.sha256base64"
+
+  request_headers = {
+    Accept = "text/plain"
+  }
 }
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -108,7 +112,7 @@ resource "aws_lambda_function" "this" {
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
   timeout          = 600
-  source_code_hash = filebase64sha256("lambda-${local.lambda_version}.zip")
+  source_code_hash = data.http.shasum.body
   tags             = module.tags.tags
 
   environment {
