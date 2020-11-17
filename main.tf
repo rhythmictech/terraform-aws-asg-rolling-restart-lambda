@@ -14,7 +14,7 @@ module "lambda_version" {
 
   repo_name          = local.repo_name
   repo_owner         = local.repo_owner
-  version_constraint = "~1.0.1-rc5"
+  version_constraint = "~1.0.1-rc6"
 }
 
 locals {
@@ -28,8 +28,12 @@ resource "null_resource" "lambda_zip" {
   }
 
   provisioner "local-exec" {
-    command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_ame}/releases/download/${local.lambda_version_tag}/lambda.zip"
+    command = "curl -Lso lambda-${local.lambda_version}.zip https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.zip"
   }
+}
+
+data "http_http" "shasum" {
+  url = "https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.sha256sum.base64"
 }
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -96,26 +100,28 @@ resource "aws_iam_role_policy_attachment" "lambda-execution-role-attach" {
 
 resource "random_uuid" "lambda_uuid" {}
 
-
 resource "aws_lambda_function" "this" {
-  filename         = "${module.path}/lambda.zip"
+  filename         = "lambda-${local.lambda_version}.zip"
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
   timeout          = 600
-  source_code_hash = data.archive_file.this.output_base64sha256
+  source_code_hash = filebase64sha256("lambda-${local.lambda_version}.zip")
   tags             = module.tags.tags
+
   environment {
     variables = {
       ASG_NAME = var.asg_name
       LOGLEVEL = var.loglevel
     }
   }
+
   lifecycle {
     ignore_changes = [
-      filename,
-      last_modified,
+      last_modified
     ]
   }
+
+  depends_on = [null_resource.lambda_zip]
 }

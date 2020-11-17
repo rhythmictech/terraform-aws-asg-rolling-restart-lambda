@@ -1,10 +1,9 @@
-name: Create a zipped lambda func for deployment
+name: release
 
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-    - 'v*' # push events to matching v*
+  release:
+    types:
+      - created
 
 jobs:
   build:
@@ -19,15 +18,34 @@ jobs:
           zip lambda.zip rolling-restart.py
           ls
 
-      - name: Get tag 
-        id: get_tag
-        run: |
-          echo ::set-output name=VTAG::$( echo $GITHUB_REF | cut -d / -f 3 )
-
-      - name: Upload lambda to assets
-        id: upload-lambda-asset
-        uses: AButler/upload-release-assets@v2.0
+      - name: upload artifact
+        uses: actions/upload-artifact@v2
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          files: '*.zip'
-          release-tag: ${{ steps.get_tag.outputs.VTAG }}
+          name: lambda.zip
+          path: ${{ github.workspace }}/lambda.zip
+          if-no-files-found: error
+
+      - name: get checksum
+        run: cat lambda.zip | openssl dgst -binary -sha256 | base64 > lambda.sha256sum.base64
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./lambda.zip
+          asset_name: lambda.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./lambda.sha256sum.base64
+          asset_name: lambda.sha256sum.base64
+          asset_content_type: text/plain
