@@ -29,7 +29,7 @@ resource "null_resource" "lambda_zip" {
   }
 
   provisioner "local-exec" {
-    command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_ame}/releases/download/${local.lambda_version_tag}/lambda.zip"
+    command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.zip"
   }
 }
 
