@@ -1,6 +1,7 @@
 module "tags" {
   source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
   tags   = var.tags
+  
   names = [
     var.name,
     "rolling-restart",
