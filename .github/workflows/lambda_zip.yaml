@@ -17,12 +17,6 @@ jobs:
         run: |
           zip lambda.zip rolling-restart.py
 
-      - name: Get release
-        id: get_release
-        uses: bruceadams/get-release@v1.2.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload lambda to assets
         uses: actions/upload-release-asset@v1.0.2
         env:
