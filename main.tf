@@ -1,5 +1,6 @@
 module "tags" {
-  source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
+  source = "rhythmictech/tags/terraform"
+  version = "~> 1.1"
   tags   = var.tags
 
   names = [
