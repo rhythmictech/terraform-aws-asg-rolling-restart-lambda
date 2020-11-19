@@ -1,7 +1,8 @@
 module "tags" {
-  source = "git::https://github.com/rhythmictech/terraform-terraform-tags.git?ref=v0.0.2"
+  source = "rhythmictech/tags/terraform"
+  version = "~> 1.1"
   tags   = var.tags
-  
+
   names = [
     var.name,
     "rolling-restart",
@@ -15,7 +16,7 @@ module "lambda_version" {
 
   repo_name          = local.repo_name
   repo_owner         = local.repo_owner
-  version_constraint = "~1.0.1-rc5"
+  version_constraint = var.lambda_version_constraint
 }
 
 locals {
@@ -29,10 +30,20 @@ resource "null_resource" "lambda_zip" {
   }
 
   provisioner "local-exec" {
-    command = "curl -Lso ${path.module}/lambda.zip https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.zip"
+    command = "curl -Lso lambda-${local.lambda_version}.zip https://github.com/${local.repo_full_name}/releases/download/${local.lambda_version_tag}/lambda.zip"
   }
 }
 
+data "external" "sha" {
+  program = [
+    "${path.module}/getsha.sh"
+  ]
+
+  query = {
+    repo_full_name = local.repo_full_name
+    tag            = local.lambda_version_tag
+  }
+}
 
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
@@ -82,7 +93,6 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
       "*"
     ]
   }
-
 }
 
 resource "aws_iam_role_policy" "this" {
@@ -98,26 +108,28 @@ resource "aws_iam_role_policy_attachment" "lambda-execution-role-attach" {
 
 resource "random_uuid" "lambda_uuid" {}
 
-
 resource "aws_lambda_function" "this" {
-  filename         = "${path.module}/lambda.zip"
+  filename         = "lambda-${local.lambda_version}.zip"
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
   runtime          = "python3.6"
   timeout          = 600
-  source_code_hash = data.archive_file.this.output_base64sha256
+  source_code_hash = data.external.sha.result.sha
   tags             = module.tags.tags
+
   environment {
     variables = {
       ASG_NAME = var.asg_name
       LOGLEVEL = var.loglevel
     }
   }
+
   lifecycle {
     ignore_changes = [
-      filename,
-      last_modified,
+      last_modified
     ]
   }
+
+  depends_on = [null_resource.lambda_zip]
 }
