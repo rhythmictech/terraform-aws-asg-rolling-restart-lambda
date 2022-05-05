@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import boto3
+from botocore.exceptions import ClientError
 import json
 import logging
 import os
@@ -24,58 +25,66 @@ try:
 except:
     raise
 
-def getAsg(name):
+
+def trigger_auto_scaling_instance_refresh(asg_name, event, strategy="Rolling",
+                                          min_healthy_percentage=90, instance_warmup=300):
     try:
-        asg = client.describe_auto_scaling_groups(
-            AutoScalingGroupNames=[ASGNAME],
-            MaxRecords=100
+        response = client.start_instance_refresh(
+            AutoScalingGroupName=asg_name,
+            Strategy=strategy,
+            Preferences={
+                'MinHealthyPercentage': min_healthy_percentage,
+                'InstanceWarmup': instance_warmup
+            })
+        logging.info("Triggered Instance Refresh {} for Auto Scaling "
+                     "group {}".format(response['InstanceRefreshId'], asg_name))
+        return response['InstanceRefreshId']
+
+    except ClientError as e:
+        logging.error("Unable to trigger Instance Refresh for "
+                      "Auto Scaling group {}".format(asg_name))
+        putJobFailure(event, "Unable to trigger Instance Refresh for "
+                             "Auto Scaling group {}".format(asg_name))
+        raise e
+
+
+def check_refresh_success(asg_name, refreshID, event):
+    logging.info("Checking Instance Refresh Status")
+    result = is_refresh_running(asg_name, refreshID, event)
+    while result not in ["Cancelled", "Successful", "Failed"]:
+        time.sleep(1)
+        result = is_refresh_running(asg_name, refreshID, event)
+    if result == "Successful":
+        return True
+    else:
+        putJobFailure(
+            event, "Instance refresh for {} failed, {}".format(asg_name, result))
+
+
+def is_refresh_running(asg_name, refreshID, event):
+    try:
+        response = client.describe_instance_refreshes(
+            AutoScalingGroupName=asg_name,
+            InstanceRefreshIds=[
+                refreshID
+            ]
         )
-        if len(asg['AutoScalingGroups']) > 1:
-            raise Exception("Found too many ASGs")
-        elif len(asg['AutoScalingGroups']) == 0:
-            raise Exception("Found no ASGs")
-        return asg
-    except:
-        raise
+        return response['InstanceRefreshes'][0]['Status']
+    except ClientError as e:
+        logging.error("Unable to read Instance Refresh Status for "
+                      "Auto Scaling group {} Refresh ID {}".format(
+                          asg_name, refreshID)
+                      )
+        putJobFailure(event, "Unable to read Instance Refresh Status for "
+                             "Auto Scaling group {} Refresh ID {}".format(asg_name, refreshID))
+        raise e
 
-
-def getAsgInstances(obj):
-    try:
-        return [instance['InstanceId'] for instance in obj['AutoScalingGroups'][0]['Instances']]
-    except:
-        raise
-
-
-def isAsgHealthy(obj):
-    try:
-        return all(instance['HealthStatus'] == 'Healthy' for instance in obj['AutoScalingGroups'][0]['Instances'])
-    except:
-        raise
-
-
-def replaceInstances(idList):
-    targetNum = len(idList)
-    for id in idList:
-        try:
-            client.set_instance_health(
-                InstanceId=id,
-                HealthStatus='Unhealthy',
-                ShouldRespectGracePeriod=False
-            )
-        except:
-            raise
-        # I want to make sure the instance is marked as unhealthy before I start looking for the new one
-        logger.info('Waiting for instance to be marked unhealthy')
-        while isAsgHealthy(getAsg(ASGNAME)) or len(getAsgInstances(getAsg(ASGNAME))) < targetNum:
-            time.sleep(1)
-        logger.info('Waiting for all instances to be marked healthy')
-        while not isAsgHealthy(getAsg(ASGNAME)) and len(getAsgInstances(getAsg(ASGNAME))) == targetNum:
-            time.sleep(1)
 
 def putJobSuccess(event):
     response = codepipeline.put_job_success_result(
         jobId=event['CodePipeline.job']['id']
     )
+
 
 def putJobFailure(event, message):
     response = codepipeline.put_job_failure_result(
@@ -86,23 +95,21 @@ def putJobFailure(event, message):
         }
     )
 
+
 def handler(event, context):
     logger.debug('## ENVIRONMENT VARIABLES')
     logger.debug(os.environ)
     logger.debug('## EVENT')
     logger.debug(event)
-
-    targetInstances = getAsgInstances(getAsg(ASGNAME))
-    logger.info('Waiting for all instances to be marked healthy')
-    while not isAsgHealthy(getAsg(ASGNAME)):
-        time.sleep(1)
     logger.info('Replacing instances')
-    replaceInstances(targetInstances)
-    logger.info(
-        'Done! All instances have been replaced and are marked as healthy'
-    )
-    putJobSuccess(event)
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Done! All instances have been replaced and are marked as healthy')
-    }
+    # Trigger Auto Scaling group Instance Refresh
+    refreshID = trigger_auto_scaling_instance_refresh(ASGNAME, event)
+    if check_refresh_success(ASGNAME, refreshID, event):
+        logger.info(
+            'Done! Instance refresh has completed'
+        )
+        putJobSuccess(event)
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Done! All instances have been replaced and are marked as healthy')
+        }
