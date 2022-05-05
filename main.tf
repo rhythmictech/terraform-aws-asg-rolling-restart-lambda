@@ -1,7 +1,7 @@
 module "tags" {
-  source = "rhythmictech/tags/terraform"
+  source  = "rhythmictech/tags/terraform"
   version = "~> 1.1"
-  tags   = var.tags
+  tags    = var.tags
 
   names = [
     var.name,
@@ -113,7 +113,7 @@ resource "aws_lambda_function" "this" {
   function_name    = "${module.tags.name32}_${substr(random_uuid.lambda_uuid.result, 0, 31)}"
   role             = aws_iam_role.this.arn
   handler          = "rolling-restart.handler"
-  runtime          = "python3.6"
+  runtime          = "python3.8"
   timeout          = 600
   source_code_hash = data.external.sha.result.sha
   tags             = module.tags.tags
