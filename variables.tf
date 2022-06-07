@@ -34,6 +34,6 @@ variable "asg_name" {
 }
 
 variable "tags" {
-  type        = map
+  type        = map(any)
   description = "Map of tags that should be added to stuff"
 }
